@@ -1,0 +1,691 @@
+{
+	"info": {
+		"_postman_id": "railnova-complete-collection",
+		"name": "RailNova Complete API Collection",
+		"description": "Complete API collection for RailNova Railway Booking System with automatic JWT token management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL if not already set",
+					"if (!pm.environment.get('baseUrl')) {",
+					"    pm.environment.set('baseUrl', 'http://localhost:8080');",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "Auth Service",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Registration successful\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"Successfully\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth-service/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth-service",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    ",
+									"    // Store token in environment variable",
+									"    pm.environment.set('authToken', jsonData.token);",
+									"    console.log('Token saved:', jsonData.token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth-service/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth-service",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login and get JWT token (automatically saved to authToken variable)"
+					},
+					"response": []
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    ",
+									"    // Store admin token",
+									"    pm.environment.set('authToken', jsonData.token);",
+									"    pm.environment.set('adminToken', jsonData.token);",
+									"    console.log('Admin token saved');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@railnova.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth-service/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth-service",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as admin (requires admin user in database)"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration and login"
+		},
+		{
+			"name": "Train Service",
+			"item": [
+				{
+					"name": "Add Train (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Train created with ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.environment.set('trainId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"trainNumber\": \"12345\",\n    \"name\": \"Rajdhani Express\",\n    \"source\": \"Mumbai\",\n    \"destination\": \"Delhi\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/trains",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trains"
+							]
+						},
+						"description": "Add a new train (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Trains",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trains",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trains"
+							]
+						},
+						"description": "Get list of all trains"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Train with Fare",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trains/{{trainId}}/fare?coachType=AC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trains",
+								"{{trainId}}",
+								"fare"
+							],
+							"query": [
+								{
+									"key": "coachType",
+									"value": "AC"
+								}
+							]
+						},
+						"description": "Get train details with fare information"
+					},
+					"response": []
+				},
+				{
+					"name": "Book Seat",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/trains/seats/{{seatId}}/book",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"trains",
+								"seats",
+								"{{seatId}}",
+								"book"
+							]
+						},
+						"description": "Book a specific seat (internal use by booking service)"
+					},
+					"response": []
+				}
+			],
+			"description": "Train management endpoints"
+		},
+		{
+			"name": "Journey Service",
+			"item": [
+				{
+					"name": "Create Journey (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Journey created with ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.environment.set('journeyId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"trainId\": {{trainId}},\n    \"journeyDate\": \"2024-12-25\",\n    \"departureTime\": \"21:00:00\",\n    \"arrivalTime\": \"05:30:00\",\n    \"coachConfigs\": [\n        {\n            \"coachType\": \"AC\",\n            \"numberOfCoaches\": 2,\n            \"seatsPerCoach\": 50\n        },\n        {\n            \"coachType\": \"SLEEPER\",\n            \"numberOfCoaches\": 5,\n            \"seatsPerCoach\": 72\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/journeys",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys"
+							]
+						},
+						"description": "Create a new journey with coaches and seats (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Journeys",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journeys",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys"
+							]
+						},
+						"description": "Get all journeys"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journey by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journeys/{{journeyId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys",
+								"{{journeyId}}"
+							]
+						},
+						"description": "Get journey details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Journeys by Date",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/journeys/by-date?date=2024-12-25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"journeys",
+								"by-date"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2024-12-25"
+								}
+							]
+						},
+						"description": "Get all journeys for a specific date"
+					},
+					"response": []
+				}
+			],
+			"description": "Journey management endpoints"
+		},
+		{
+			"name": "Search Service",
+			"item": [
+				{
+					"name": "Search Trains",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/search-service/search?source=Mumbai&destination=Delhi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"search-service",
+								"search"
+							],
+							"query": [
+								{
+									"key": "source",
+									"value": "Mumbai"
+								},
+								{
+									"key": "destination",
+									"value": "Delhi"
+								}
+							]
+						},
+						"description": "Search trains by source and destination"
+					},
+					"response": []
+				}
+			],
+			"description": "Train search endpoints"
+		},
+		{
+			"name": "Fare Service",
+			"item": [
+				{
+					"name": "Add Fare (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"trainId\": {{trainId}},\n    \"coachType\": \"AC\",\n    \"amount\": 1500.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fare-service/fare",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fare-service",
+								"fare"
+							]
+						},
+						"description": "Add fare for a train and coach type (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Fare",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fare-service/fare?trainId={{trainId}}&coachType=AC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fare-service",
+								"fare"
+							],
+							"query": [
+								{
+									"key": "trainId",
+									"value": "{{trainId}}"
+								},
+								{
+									"key": "coachType",
+									"value": "AC"
+								}
+							]
+						},
+						"description": "Get fare for a train and coach type"
+					},
+					"response": []
+				}
+			],
+			"description": "Fare management endpoints"
+		},
+		{
+			"name": "Booking Service",
+			"item": [
+				{
+					"name": "Create Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Booking created with ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.environment.set('bookingId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"trainId\": {{trainId}},\n    \"seatId\": 5,\n    \"passengerName\": \"John Doe\",\n    \"coachType\": \"AC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/booking-service/booking",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"booking-service",
+								"booking"
+							]
+						},
+						"description": "Create a new booking"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/booking-service/booking/{{bookingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"booking-service",
+								"booking",
+								"{{bookingId}}"
+							]
+						},
+						"description": "Get booking details by ID"
+					},
+					"response": []
+				}
+			],
+			"description": "Booking management endpoints"
+		},
+		{
+			"name": "Payment Service",
+			"item": [
+				{
+					"name": "Process Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Payment processed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookingId\": {{bookingId}},\n    \"amount\": 1500.00,\n    \"paymentMethod\": \"UPI\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payment-service/payments/process",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payment-service",
+								"payments",
+								"process"
+							]
+						},
+						"description": "Process payment for a booking (Payment methods: UPI, CARD, NETBANKING)"
+					},
+					"response": []
+				}
+			],
+			"description": "Payment processing endpoints"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}

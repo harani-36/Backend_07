@@ -1,0 +1,44 @@
+package com.fare.controller;
+
+import java.util.List;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fare.dto.FareRequest;
+import com.fare.dto.FareResponse;
+import com.fare.service.FareService;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/fare")
+@RequiredArgsConstructor
+public class FareController {
+    private final FareService fareService;
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public FareResponse addFare(@RequestBody FareRequest request) {
+        return fareService.addFare(request);
+    }
+    
+    // Public endpoint - no authentication required
+    @GetMapping
+    public FareResponse getFare(
+            @RequestParam Long trainId,
+            @RequestParam String coachType) {
+        return fareService.getFare(trainId, coachType);
+    }
+    
+    @GetMapping("/train/{trainId}/coaches")
+    public List<String> getAvailableCoachTypes(@PathVariable Long trainId) {
+        return fareService.getAvailableCoachTypes(trainId);
+    }
+}

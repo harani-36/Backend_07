@@ -1,0 +1,81 @@
+package com.booking.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.booking.client.TrainClient;
+import com.booking.dto.BookingRequest;
+import com.booking.entity.Booking;
+import com.booking.exception.SeatAlreadyBookedException;
+import com.booking.repository.BookingRepository;
+import com.booking.service.impl.BookingServiceImpl;
+
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
+
+@ExtendWith(MockitoExtension.class)
+class BookingServiceImplTest {
+
+    @Mock
+    private BookingRepository bookingRepository;
+
+    @Mock
+    private TrainClient trainClient;
+
+    @InjectMocks
+    private BookingServiceImpl bookingService;
+
+    @Test
+    void createBooking_Success() {
+        BookingRequest request = new BookingRequest();
+        request.setTrainId(1L);
+        request.setSeatId(1L);
+        request.setPassengerName("John Doe");
+        request.setCoachType("AC");
+
+        Booking savedBooking = new Booking();
+        savedBooking.setId(1L);
+        savedBooking.setTrainId(1L);
+        savedBooking.setSeatId(1L);
+        savedBooking.setPassengerName("John Doe");
+        savedBooking.setCoachType("AC");
+
+        when(bookingRepository.save(any(Booking.class))).thenReturn(savedBooking);
+
+        Booking result = bookingService.createBooking(request);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("John Doe", result.getPassengerName());
+        verify(trainClient).bookSeat(1L);
+        verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    void createBooking_SeatAlreadyBooked() {
+        BookingRequest request = new BookingRequest();
+        request.setTrainId(1L);
+        request.setSeatId(1L);
+        request.setPassengerName("John Doe");
+        request.setCoachType("AC");
+
+        Request feignRequest = Request.create(Request.HttpMethod.PUT, "/seats/1/book",
+                java.util.Collections.emptyMap(), null, new RequestTemplate());
+        
+        when(trainClient.bookSeat(anyLong())).thenThrow(new FeignException.Conflict("Seat already booked", feignRequest, null, null));
+
+        assertThrows(FeignException.Conflict.class, () -> bookingService.createBooking(request));
+    }
+}

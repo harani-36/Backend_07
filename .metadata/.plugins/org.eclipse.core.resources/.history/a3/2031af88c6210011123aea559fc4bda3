@@ -1,0 +1,189 @@
+package com.train.controller;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.train.dto.TrainFareResponse;
+import com.train.dto.TrainRequest;
+import com.train.dto.TrainResponse;
+import com.train.entity.Seat;
+import com.train.entity.SeatStatus;
+import com.train.repository.SeatRepository;
+import com.train.service.TrainService;
+
+import com.train.exception.ResourceNotFoundException;
+import com.train.exception.SeatAlreadyBookedException;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/trains")
+@RequiredArgsConstructor
+public class TrainController {
+    
+    private static final Logger log = LoggerFactory.getLogger(TrainController.class);
+    private final TrainService trainService;
+    private final SeatRepository seatRepository;
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public TrainResponse addTrain(@Valid @RequestBody TrainRequest request) {
+        log.info("Add train request received: {}", request.getName());
+        return trainService.addTrain(request);
+    }
+    
+    @GetMapping
+    public List<TrainResponse> getAllTrains() {
+        log.info("Get all trains request received");
+        return trainService.getAllTrains();
+    }
+
+    @GetMapping("/search")
+    public List<TrainResponse> searchTrains(
+            @RequestParam String source,
+            @RequestParam String destination) {
+        log.info("Search trains request: {} -> {}", source, destination);
+        return trainService.searchTrains(source, destination);
+    }
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public TrainResponse updateTrain(@PathVariable Long id, @Valid @RequestBody TrainRequest request) {
+        log.info("Update train request received for id: {}, name: {}", id, request.getName());
+        return trainService.updateTrain(id, request);
+    }
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public void deleteTrain(@PathVariable Long id) {
+        log.info("Delete train request received for id: {}", id);
+        trainService.deleteTrain(id);
+    }
+    
+    @GetMapping("/stations")
+    public List<String> getAllStations() {
+        log.info("Get all stations request received");
+        return trainService.getAllStations();
+    }
+    
+    @GetMapping("/{id}/fare")
+    public TrainFareResponse getTrainWithFare(
+            @PathVariable Long id,
+            @RequestParam String coachType) {
+        log.info("Get train with fare request for trainId: {}, coachType: {}", id, coachType);
+        return trainService.getTrainWithFare(id, coachType);
+    }
+    
+    @PutMapping("/seats/{seatId}/lock")
+    @Transactional
+    public void lockSeat(@PathVariable Long seatId) {
+        log.info("Lock seat request for seatId: {}", seatId);
+        
+        Seat seat = seatRepository.findSeatForUpdate(seatId)
+                .orElseThrow(() -> {
+                    log.error("Seat not found with id: {}", seatId);
+                    return new ResourceNotFoundException("Seat not found");
+                });
+
+        if (seat.getStatus() == SeatStatus.BOOKED) {
+            log.error("Seat already booked: {}", seatId);
+            throw new SeatAlreadyBookedException("Seat already booked");
+        }
+        
+        seat.setStatus(SeatStatus.LOCKED);
+        seatRepository.save(seat);
+        log.info("Seat locked successfully: {}", seatId);
+    }
+    
+    @PutMapping("/seats/{seatId}/book")
+    @Transactional
+    public void bookSeat(@PathVariable Long seatId) {
+        log.info("Book seat request for seatId: {}", seatId);
+        
+        Seat seat = seatRepository.findSeatForUpdate(seatId)
+                .orElseThrow(() -> {
+                    log.error("Seat not found with id: {}", seatId);
+                    return new ResourceNotFoundException("Seat not found");
+                });
+
+        if (seat.getStatus() == SeatStatus.BOOKED) {
+            log.error("Seat already booked: {}", seatId);
+            throw new SeatAlreadyBookedException("Seat already booked");
+        }
+        
+        seat.setStatus(SeatStatus.BOOKED);
+        seatRepository.save(seat);
+        log.info("Seat booked successfully: {}", seatId);
+    }
+    
+    @PutMapping("/seats/{seatId}/unlock")
+    @Transactional
+    public void unlockSeat(@PathVariable Long seatId) {
+        log.info("Unlock seat request for seatId: {}", seatId);
+        
+        Seat seat = seatRepository.findSeatForUpdate(seatId)
+                .orElseThrow(() -> {
+                    log.error("Seat not found with id: {}", seatId);
+                    return new ResourceNotFoundException("Seat not found");
+                });
+        
+        seat.setStatus(SeatStatus.AVAILABLE);
+        seatRepository.save(seat);
+        log.info("Seat unlocked successfully: {}", seatId);
+    }
+    
+    @PostMapping("/{trainId}/auto-assign-seat")
+    @Transactional
+    public Long autoAssignSeat(@PathVariable Long trainId, @RequestParam String coachType) {
+        log.info("Auto-assign seat request for trainId: {}, coachType: {}", trainId, coachType);
+        
+        // Find first available seat in the specified coach type
+        Seat availableSeat = seatRepository.findFirstAvailableSeatByTrainAndCoach(trainId, coachType)
+                .orElseThrow(() -> {
+                    log.error("No available seats found for trainId: {}, coachType: {}", trainId, coachType);
+                    return new ResourceNotFoundException("No available seats in " + coachType + " coach");
+                });
+        
+        // Lock the seat
+        availableSeat.setStatus(SeatStatus.LOCKED);
+        seatRepository.save(availableSeat);
+        
+        log.info("Auto-assigned and locked seat: {} for trainId: {}, coachType: {}", availableSeat.getId(), trainId, coachType);
+        return availableSeat.getId();
+    }
+    
+    // New endpoints for coach management
+    @GetMapping("/{trainId}")
+    public TrainResponse getTrainById(@PathVariable Long trainId) {
+        log.info("Get train by ID request: {}", trainId);
+        return trainService.getTrainById(trainId);
+    }
+    
+    @GetMapping("/coaches/total-seats")
+    public Integer getTotalSeats(@RequestParam Long trainId, @RequestParam String coachType) {
+        log.info("Get total seats request for trainId: {}, coachType: {}", trainId, coachType);
+        return trainService.getTotalSeatsByCoachType(trainId, coachType);
+    }
+    
+    @GetMapping("/seats/available")
+    public Integer getAvailableSeats(
+            @RequestParam Long trainId, 
+            @RequestParam String coachType,
+            @RequestParam String date) {
+        log.info("Get available seats request for trainId: {}, coachType: {}, date: {}", trainId, coachType, date);
+        return trainService.getAvailableSeatsByCoachType(trainId, coachType, date);
+    }
+}

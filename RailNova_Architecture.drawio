@@ -1,0 +1,129 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="RailNova Architecture" id="architecture">
+    <mxGraphModel dx="1434" dy="844" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Eureka Server Outline -->
+        <mxCell id="eureka-outline" value="Eureka Server (Port: 8761)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=11;dashed=1;dashPattern=5 5;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="1000" height="480" as="geometry" />
+        </mxCell>
+        
+        <!-- Client -->
+        <mxCell id="client" value="Client&#xa;(User / Browser)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="160" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- API Gateway -->
+        <mxCell id="gateway" value="API Gateway&#xa;Port: 8080" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="140" width="160" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Auth Service -->
+        <mxCell id="auth" value="Auth Service&#xa;Port: 8081" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="260" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Train Service -->
+        <mxCell id="train" value="Train Service&#xa;Port: 8082" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="260" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Search Service -->
+        <mxCell id="search" value="Search Service&#xa;Port: 8084" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="260" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Fare Service -->
+        <mxCell id="fare" value="Fare Service&#xa;Port: 8085" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="260" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Booking Service -->
+        <mxCell id="booking" value="Booking Service&#xa;Port: 8083" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Payment Service -->
+        <mxCell id="payment" value="Payment Service&#xa;Port: 8086" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="400" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Notification Service -->
+        <mxCell id="notification" value="Notification Service&#xa;Port: 8087" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="560" width="140" height="60" as="geometry" />
+        </mxCell>
+        
+        <!-- Client to Gateway -->
+        <mxCell id="edge1" edge="1" parent="1" source="client" target="gateway">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Gateway to Auth -->
+        <mxCell id="edge2" edge="1" parent="1" source="gateway" target="auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway to Train -->
+        <mxCell id="edge3" edge="1" parent="1" source="gateway" target="train">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway to Search -->
+        <mxCell id="edge4" edge="1" parent="1" source="gateway" target="search">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway to Fare -->
+        <mxCell id="edge5" edge="1" parent="1" source="gateway" target="fare">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway to Booking -->
+        <mxCell id="edge6" edge="1" parent="1" source="gateway" target="booking">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Gateway to Payment -->
+        <mxCell id="edge7" edge="1" parent="1" source="gateway" target="payment">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Booking to Train -->
+        <mxCell id="edge8" edge="1" parent="1" source="booking" target="train">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Booking to Fare -->
+        <mxCell id="edge9" edge="1" parent="1" source="booking" target="fare">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="360" />
+              <mxPoint x="690" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Booking to Payment -->
+        <mxCell id="edge10" edge="1" parent="1" source="booking" target="payment">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Payment to Notification -->
+        <mxCell id="edge11" edge="1" parent="1" source="payment" target="notification">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

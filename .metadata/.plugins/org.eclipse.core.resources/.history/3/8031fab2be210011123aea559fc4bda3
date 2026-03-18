@@ -1,0 +1,43 @@
+package com.train.service.impl;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.train.service.CoachService;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CoachServiceImpl implements CoachService {
+    
+    private static final Logger log = LoggerFactory.getLogger(CoachServiceImpl.class);
+    private final RestTemplate restTemplate;
+    
+    @Override
+    public List<String> getAvailableCoachTypes(Long trainId) {
+        log.info("Fetching available coach types for train ID: {}", trainId);
+        
+        try {
+            // Call fare service to get available coach types for this train
+            String fareServiceUrl = "http://FARE-SERVICE/fare/train/" + trainId + "/coaches";
+            
+            @SuppressWarnings("unchecked")
+            List<String> coachTypes = restTemplate.getForObject(fareServiceUrl, List.class);
+            
+            log.info("Found {} coach types for train ID: {}", 
+                    coachTypes != null ? coachTypes.size() : 0, trainId);
+            
+            return coachTypes != null ? coachTypes : List.of();
+            
+        } catch (Exception e) {
+            log.error("Error fetching coach types for train ID: {}", trainId, e);
+            // Return default coach types as fallback
+            return List.of("SLEEPER", "AC_3_TIER", "AC_2_TIER", "AC_1_TIER");
+        }
+    }
+}
